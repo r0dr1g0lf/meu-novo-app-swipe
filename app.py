@@ -1,35 +1,36 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Swipe App", layout="centered")
+st.set_page_config(page_title="Swipe App", layout="centered")[cite: 4]
 
 if 'usuario_logado' not in st.session_state:
-    st.session_state.usuario_logado = False
-
-if 'resultado_swipe' not in st.session_state:
-    st.session_state.resultado_swipe = ""
+    st.session_state.usuario_logado = False[cite: 4]
 
 if not st.session_state.usuario_logado:
-    st.title("📱 Bem-vindo!")
-    nome = st.text_input("Qual seu nome?")
-    if st.button("Começar Avaliação"):
+    st.title("📱 Bem-vindo!")[cite: 4]
+    nome = st.text_input("Qual seu nome?")[cite: 4]
+    if st.button("Começar Avaliação"):[cite: 4]
         if nome:
-            st.session_state.usuario_logado = True
-            st.session_state.nome_usuario = nome
-            st.rerun()
+            st.session_state.usuario_logado = True[cite: 4]
+            st.session_state.nome_usuario = nome[cite: 4]
+            st.rerun()[cite: 4]
         else:
-            st.error("Por favor, digite seu nome.")
+            st.error("Por favor, digite seu nome.")[cite: 4]
 
 else:
-    st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
+    st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")[cite: 4]
     
-    if st.session_state.resultado_swipe == "sim":
-        st.success("✅ Você se interessou!")
-    elif st.session_state.resultado_swipe == "nao":
-        st.error("❌ Você não se interessou.")
-
     swipe_js = """
     <style>
+        .container {
+            position: relative;
+            width: 100%;
+            height: 550px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
         .swipe-card {
             width: 100%;
             max-width: 400px;
@@ -41,13 +42,27 @@ else:
             position: relative;
             touch-action: none;
             user-select: none;
-            margin: 0 auto;
+            z-index: 2;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
+        #status-msg {
+            position: absolute;
+            z-index: 1;
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            display: none;
+        }
     </style>
-    <div id="card" class="swipe-card"></div>
+    <div class="container">
+        <div id="status-msg"></div>
+        <div id="card" class="swipe-card"></div>
+    </div>
     <script>
         const card = document.getElementById('card');
+        const statusMsg = document.getElementById('status-msg');
         let startX;
         let currentX;
 
@@ -71,10 +86,16 @@ else:
             if (diffX > threshold) {
                 card.style.transition = '0.3s';
                 card.style.transform = 'translateX(1000px) rotate(30deg)';
+                statusMsg.innerText = "SEINTERESSOU";
+                statusMsg.style.color = "green";
+                statusMsg.style.display = "block";
                 window.parent.postMessage({type: 'swipe', direction: 'right'}, '*');
             } else if (diffX < -threshold) {
                 card.style.transition = '0.3s';
                 card.style.transform = 'translateX(-1000px) rotate(-30deg)';
+                statusMsg.innerText = "NÃO SE INTERESSOU";
+                statusMsg.style.color = "red";
+                statusMsg.style.display = "block";
                 window.parent.postMessage({type: 'swipe', direction: 'left'}, '*');
             } else {
                 card.style.transition = '0.3s';
@@ -83,16 +104,14 @@ else:
             startX = null;
         });
     </script>
-    """
+    """[cite: 4]
 
-    components.html(swipe_js, height=550)
+    components.html(swipe_js, height=550)[cite: 4]
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)[cite: 4]
     with col1:
-        if st.button("⬅️ Esquerda (Não)", use_container_width=True):
-            st.session_state.resultado_swipe = "nao"
-            st.rerun()
+        if st.button("⬅️ Esquerda (Não)", use_container_width=True):[cite: 4]
+            st.toast("Você não se interessou.")[cite: 4]
     with col2:
-        if st.button("Direita (Sim) ➡️", use_container_width=True):
-            st.session_state.resultado_swipe = "sim"
-            st.rerun()
+        if st.button("Direita (Sim) ➡️", use_container_width=True):[cite: 4]
+            st.toast("Interesse registrado!", icon="🔥")[cite: 4]
