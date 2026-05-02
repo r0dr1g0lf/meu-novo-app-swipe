@@ -4,67 +4,61 @@ import base64
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
-# Simulação de banco de dados global para a sessão atual do servidor
-if 'fotos_cadastradas' not in st.session_state:
-    st.session_state.fotos_cadastradas = [
-        {"url": "https://picsum.photos/id/1011/400/500", "tipo": "url"},
-        {"url": "https://picsum.photos/id/1012/400/500", "tipo": "url"},
-        {"url": "https://picsum.photos/id/1013/400/500", "tipo": "url"},
-        {"url": "https://picsum.photos/id/1014/400/500", "tipo": "url"},
-        {"url": "https://picsum.photos/id/1015/400/500", "tipo": "url"}
-    ]
-
 if 'usuario_logado' not in st.session_state:
-    st.session_state.usuario_logado = False
+    st.session_state.usuario_logado = False[cite: 1]
 
 if 'indice_imagem' not in st.session_state:
-    st.session_state.indice_imagem = 0
+    st.session_state.indice_imagem = 0[cite: 1]
 
-def converter_foto_para_base64(foto_arquivo):
-    if foto_arquivo is not None:
-        bytes_data = foto_arquivo.getvalue()
-        base64_str = base64.b64encode(bytes_data).decode()
-        return f"data:image/jpeg;base64,{base64_str}"
-    return None
+if 'banco_de_fotos' not in st.session_state:
+    st.session_state.banco_de_fotos = [
+        "https://picsum.photos/id/1011/400/500",
+        "https://picsum.photos/id/1012/400/500",
+        "https://picsum.photos/id/1013/400/500",
+        "https://picsum.photos/id/1014/400/500",
+        "https://picsum.photos/id/1015/400/500"
+    ]
 
 if not st.session_state.usuario_logado:
     st.title("📱 Bem-vindo!")
-    nome = st.text_input("Qual seu nome?")
+    nome = st.text_input("Qual seu nome?")[cite: 1]
     
-    metodo_foto = st.radio("Como deseja adicionar sua foto?", ["Carregar arquivo", "Tirar foto"])
+    metodo_foto = st.radio("Como deseja adicionar sua foto?", ["Carregar arquivo", "Tirar foto"])[cite: 1]
     
     foto_perfil = None
     if metodo_foto == "Carregar arquivo":
-        foto_perfil = st.file_uploader("Escolha uma foto", type=['png', 'jpg', 'jpeg'])
+        foto_perfil = st.file_uploader("Escolha uma foto", type=['png', 'jpg', 'jpeg'])[cite: 1]
     else:
-        foto_perfil = st.camera_input("Tirar foto")
+        foto_perfil = st.camera_input("Tirar foto")[cite: 1]
 
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
-            foto_base64 = converter_foto_para_base64(foto_perfil)
-            st.session_state.usuario_logado = True
-            st.session_state.nome_usuario = nome
-            st.session_state.foto_usuario = foto_perfil
-            
-            # Adiciona a foto do usuário à lista global para que apareça no swipe
-            st.session_state.fotos_cadastradas.append({"url": foto_base64, "tipo": "base64"})
-            st.rerun()
+            st.session_state.usuario_logado = True[cite: 1]
+            st.session_state.nome_usuario = nome[cite: 1]
+            st.session_state.foto_usuario = foto_perfil[cite: 1]
+            st.session_state.banco_de_fotos.append(foto_perfil)
+            st.rerun()[cite: 1]
         elif not nome:
-            st.error("Por favor, digite seu nome.")
+            st.error("Por favor, digite seu nome.")[cite: 1]
         elif not foto_perfil:
-            st.error("Por favor, adicione uma foto.")
+            st.error("Por favor, adicione uma foto.")[cite: 1]
 
 else:
-    col_perfil1, col_perfil2 = st.columns([1, 4])
+    col_perfil1, col_perfil2 = st.columns([1, 4])[cite: 1]
     with col_perfil1:
-        st.image(st.session_state.foto_usuario, width=70)
+        st.image(st.session_state.foto_usuario, width=70)[cite: 1]
     with col_perfil2:
-        st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize as fotos dos outros usuários:")
+        st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")[cite: 1]
     
-    total_fotos = len(st.session_state.fotos_cadastradas)
-    foto_obj = st.session_state.fotos_cadastradas[st.session_state.indice_imagem % total_fotos]
-    imagem_atual = foto_obj["url"]
+    imagem_atual = st.session_state.banco_de_fotos[st.session_state.indice_imagem % len(st.session_state.banco_de_fotos)]
     
+    if hasattr(imagem_atual, 'read'):
+        bytes_data = imagem_atual.getvalue()
+        base64_image = base64.b64encode(bytes_data).decode()
+        img_src = f"data:image/jpeg;base64,{base64_image}"
+    else:
+        img_src = imagem_atual[cite: 1]
+
     swipe_js = f"""
     <style>
         .container {{
@@ -79,7 +73,7 @@ else:
         .swipe-card {{
             width: 100%;
             height: 100%;
-            background-image: url('{imagem_atual}');
+            background-image: url('{img_src}');
             background-size: cover;
             background-position: center;
             border-radius: 20px;
@@ -163,18 +157,18 @@ else:
             startX = null;
         }});
     </script>
-    """
+    """[cite: 1]
 
-    components.html(swipe_js, height=550)
+    components.html(swipe_js, height=550)[cite: 1]
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)[cite: 1]
     with col1:
-        if st.button("⬅️ Esquerda (Não)", use_container_width=True):
-            st.session_state.indice_imagem += 1
-            st.toast("Você não se interessou.")
-            st.rerun()
+        if st.button("⬅️ Esquerda (Não)", use_container_width=True):[cite: 1]
+            st.session_state.indice_imagem += 1[cite: 1]
+            st.toast("Você não se interessou.")[cite: 1]
+            st.rerun()[cite: 1]
     with col2:
-        if st.button("Direita (Sim) ➡️", use_container_width=True):
-            st.session_state.indice_imagem += 1
-            st.toast("Interesse registrado!", icon="🔥")
-            st.rerun()
+        if st.button("Direita (Sim) ➡️", use_container_width=True):[cite: 1]
+            st.session_state.indice_imagem += 1[cite: 1]
+            st.toast("Interesse registrado!", icon="🔥")[cite: 1]
+            st.rerun()[cite: 1]
