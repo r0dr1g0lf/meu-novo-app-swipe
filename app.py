@@ -21,9 +21,6 @@ if 'usuario_logado' not in st.session_state:
 if 'indice_imagem' not in st.session_state:
     st.session_state.indice_imagem = 0
 
-if 'total_usuarios_vistos' not in st.session_state:
-    st.session_state.total_usuarios_vistos = 0
-
 def get_image_base64(image_file):
     if hasattr(image_file, 'getvalue'):
         return base64.b64encode(image_file.getvalue()).decode()
@@ -44,6 +41,11 @@ if not st.session_state.usuario_logado:
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
             foto_base64 = get_image_base64(foto_perfil)
+            # Remove usuário antigo com mesmo nome para permitir troca de foto
+            for i, u in enumerate(banco_usuarios):
+                if u['nome'] == nome:
+                    banco_usuarios.pop(i)
+            
             banco_usuarios.append({"nome": nome, "foto": foto_base64})
             
             st.session_state.usuario_logado = True
@@ -56,24 +58,32 @@ if not st.session_state.usuario_logado:
             st.error("Por favor, adicione uma foto.")
 
 else:
-    # Monitora o tamanho do banco global. Se mudar, a página atualiza.
-    if "ultima_contagem" not in st.session_state:
-        st.session_state.ultima_contagem = len(banco_usuarios)
-    
-    if len(banco_usuarios) != st.session_state.ultima_contagem:
-        st.session_state.ultima_contagem = len(banco_usuarios)
-        st.rerun()
+    # Auto-refresh a cada 5 segundos para puxar fotos novas de outros navegadores
+    components.html(
+        """
+        <script>
+        if (!window.location.hash.includes('no-reload')) {
+            setTimeout(function(){
+                window.parent.location.reload();
+            }, 5000);
+        }
+        </script>
+        """,
+        height=0,
+    )
 
     col_perfil1, col_perfil2 = st.columns([1, 4])
     with col_perfil1:
         st.image(st.session_state.foto_usuario, width=70)
     with col_perfil2:
-        st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
+        st.write(f"Olá, **{st.session_state.nome_usuario}**!")
     
     outros_usuarios = [u for u in banco_usuarios if u['nome'] != st.session_state.nome_usuario]
     
     if len(outros_usuarios) > 0:
-        usuario_atual = outros_usuarios[st.session_state.indice_imagem % len(outros_usuarios)]
+        # Garante que o índice não estoure se a lista mudar
+        idx = st.session_state.indice_imagem % len(outros_usuarios)
+        usuario_atual = outros_usuarios[idx]
         imagem_data = f"data:image/png;base64,{usuario_atual['foto']}"
         nome_exibido = usuario_atual['nome']
         
@@ -112,93 +122,23 @@ else:
                 text-shadow: 2px 2px 8px rgba(0,0,0,1);
                 z-index: 4;
             }}
-            .overlay-text {{
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 40px;
-                font-weight: bold;
-                color: white;
-                text-shadow: 2px 2px 15px rgba(0,0,0,0.9);
-                z-index: 5;
-                display: none;
-                text-align: center;
-                width: 100%;
-                pointer-events: none;
-                font-family: sans-serif;
-            }}
         </style>
         <div class="container">
-            <div id="overlay-right" class="overlay-text" style="color: #4CAF50;">SE INTERESSOU</div>
-            <div id="overlay-left" class="overlay-text" style="color: #FF5252;">NÃO SE INTERESSOU</div>
             <div id="card" class="swipe-card">
                 <div class="name-label">{nome_exibido}</div>
             </div>
         </div>
-        <script>
-            const card = document.getElementById('card');
-            const overlayRight = document.getElementById('overlay-right');
-            const overlayLeft = document.getElementById('overlay-left');
-            let startX;
-            let currentX;
-
-            card.addEventListener('pointerdown', (e) => {{
-                startX = e.clientX;
-                card.style.transition = 'none';
-            }});
-
-            document.addEventListener('pointermove', (e) => {{
-                if (!startX) return;
-                currentX = e.clientX;
-                const diffX = currentX - startX;
-                card.style.transform = `translateX(${{diffX}}px) rotate(${{diffX / 20}}deg)`;
-                
-                if (diffX > 50) {{
-                    overlayRight.style.display = 'block';
-                    overlayLeft.style.display = 'none';
-                }} else if (diffX < -50) {{
-                    overlayLeft.style.display = 'block';
-                    overlayRight.style.display = 'none';
-                }} else {{
-                    overlayRight.style.display = 'none';
-                    overlayLeft.style.display = 'none';
-                }}
-            }});
-
-            document.addEventListener('pointerup', (e) => {{
-                if (!startX) return;
-                const diffX = currentX - startX;
-                const threshold = window.innerWidth * 0.3;
-
-                if (diffX > threshold) {{
-                    card.style.transition = '0.3s';
-                    card.style.transform = 'translateX(1000px) rotate(30deg)';
-                    window.parent.postMessage({{type: 'swipe', direction: 'right'}}, '*');
-                }} else if (diffX < -threshold) {{
-                    card.style.transition = '0.3s';
-                    card.style.transform = 'translateX(-1000px) rotate(-30deg)';
-                    window.parent.postMessage({{type: 'swipe', direction: 'left'}}, '*');
-                }} else {{
-                    card.style.transition = '0.3s';
-                    card.style.transform = 'translateX(0px) rotate(0deg)';
-                    overlayRight.style.display = 'none';
-                    overlayLeft.style.display = 'none';
-                }}
-                startX = null;
-            }});
-        </script>
         """
 
-        components.html(swipe_js, height=550)
+        components.html(swipe_js, height=520)
 
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("⬅️ Esquerda (Não)", use_container_width=True):
+            if st.button("⬅️ Pular", use_container_width=True):
                 st.session_state.indice_imagem += 1
                 st.rerun()
         with col2:
-            if st.button("Direita (Sim) ➡️", use_container_width=True):
+            if st.button("Direita (Match) ➡️", use_container_width=True):
                 meu_nome = st.session_state.nome_usuario
                 nome_alvo = nome_exibido
                 
@@ -210,19 +150,15 @@ else:
                     st.success(f"Match com {nome_alvo}!")
                     st.balloons()
                 else:
-                    st.toast("Interesse registrado!", icon="🔥")
+                    st.toast(f"Interesse em {nome_alvo} enviado!")
                 
                 st.session_state.indice_imagem += 1
                 st.rerun()
-                
-        # Pequeno script para atualizar a página a cada 10 segundos e checar novos usuários
-        st.empty()
-        st.write("---")
-        if st.button("Atualizar agora"):
+    else:
+        st.info("Aguardando novas pessoas entrarem...")
+        if st.button("Verificar agora"):
             st.rerun()
             
-    else:
-        st.info("Aguardando novos usuários...")
-        st.button("Verificar novos cadastros")
-        # Auto-refresh quando estiver vazio
-        components.html("<script>setTimeout(function(){window.parent.location.reload();}, 5000);</script>", height=0)
+    if st.button("Sair / Trocar Foto"):
+        st.session_state.usuario_logado = False
+        st.rerun()
