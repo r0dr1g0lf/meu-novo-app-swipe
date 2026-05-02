@@ -4,20 +4,25 @@ import base64
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
-if 'usuario_logado' not in st.session_state:
-    st.session_state.usuario_logado = False
-
-if 'indice_imagem' not in st.session_state:
-    st.session_state.indice_imagem = 0
-
-if 'banco_de_fotos' not in st.session_state:
-    st.session_state.banco_de_fotos = [
+# Função para criar um banco de dados global compartilhado entre todos os usuários
+@st.cache_resource
+def get_global_image_bank():
+    return [
         "https://picsum.photos/id/1011/400/500",
         "https://picsum.photos/id/1012/400/500",
         "https://picsum.photos/id/1013/400/500",
         "https://picsum.photos/id/1014/400/500",
         "https://picsum.photos/id/1015/400/500"
     ]
+
+# Carrega a lista global
+banco_global = get_global_image_bank()
+
+if 'usuario_logado' not in st.session_state:
+    st.session_state.usuario_logado = False
+
+if 'indice_imagem' not in st.session_state:
+    st.session_state.indice_imagem = 0
 
 if not st.session_state.usuario_logado:
     st.title("📱 Bem-vindo!")
@@ -36,7 +41,10 @@ if not st.session_state.usuario_logado:
             st.session_state.usuario_logado = True
             st.session_state.nome_usuario = nome
             st.session_state.foto_usuario = foto_perfil
-            st.session_state.banco_de_fotos.append(foto_perfil)
+            
+            # Adiciona a foto ao banco global (visível para todos)
+            banco_global.append(foto_perfil)
+            
             st.rerun()
         elif not nome:
             st.error("Por favor, digite seu nome.")
@@ -50,7 +58,8 @@ else:
     with col_perfil2:
         st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
-    imagem_atual = st.session_state.banco_de_fotos[st.session_state.indice_imagem % len(st.session_state.banco_de_fotos)]
+    # Busca a imagem atual da lista global
+    imagem_atual = banco_global[st.session_state.indice_imagem % len(banco_global)]
     
     if hasattr(imagem_atual, 'read'):
         bytes_data = imagem_atual.getvalue()
