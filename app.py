@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
+import time
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
@@ -41,7 +42,7 @@ if not st.session_state.usuario_logado:
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
             foto_base64 = get_image_base64(foto_perfil)
-            # Remove usuário antigo com mesmo nome para permitir troca de foto
+            
             for i, u in enumerate(banco_usuarios):
                 if u['nome'] == nome:
                     banco_usuarios.pop(i)
@@ -58,20 +59,6 @@ if not st.session_state.usuario_logado:
             st.error("Por favor, adicione uma foto.")
 
 else:
-    # Auto-refresh a cada 5 segundos para puxar fotos novas de outros navegadores
-    components.html(
-        """
-        <script>
-        if (!window.location.hash.includes('no-reload')) {
-            setTimeout(function(){
-                window.parent.location.reload();
-            }, 5000);
-        }
-        </script>
-        """,
-        height=0,
-    )
-
     col_perfil1, col_perfil2 = st.columns([1, 4])
     with col_perfil1:
         st.image(st.session_state.foto_usuario, width=70)
@@ -81,7 +68,6 @@ else:
     outros_usuarios = [u for u in banco_usuarios if u['nome'] != st.session_state.nome_usuario]
     
     if len(outros_usuarios) > 0:
-        # Garante que o índice não estoure se a lista mudar
         idx = st.session_state.indice_imagem % len(outros_usuarios)
         usuario_atual = outros_usuarios[idx]
         imagem_data = f"data:image/png;base64,{usuario_atual['foto']}"
@@ -156,9 +142,12 @@ else:
                 st.rerun()
     else:
         st.info("Aguardando novas pessoas entrarem...")
-        if st.button("Verificar agora"):
-            st.rerun()
-            
+        
+    st.divider()
+    
+    if st.button("Atualizar Lista"):
+        st.rerun()
+
     if st.button("Sair / Trocar Foto"):
         st.session_state.usuario_logado = False
         st.rerun()
