@@ -4,13 +4,16 @@ import base64
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
-# Função para criar um banco de dados na memória compartilhado entre todos os usuários
 @st.cache_resource
 def obter_banco_dados():
     return []
 
-# Acessa a lista global
+@st.cache_resource
+def obter_interesses():
+    return {}
+
 banco_usuarios = obter_banco_dados()
+interesses = obter_interesses()
 
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = False
@@ -38,7 +41,6 @@ if not st.session_state.usuario_logado:
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
             foto_base64 = get_image_base64(foto_perfil)
-            # Adiciona o novo usuário ao banco compartilhado
             banco_usuarios.append({"nome": nome, "foto": foto_base64})
             
             st.session_state.usuario_logado = True
@@ -57,7 +59,6 @@ else:
     with col_perfil2:
         st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
-    # Filtra os usuários cadastrados (exceto o próprio usuário atual)
     outros_usuarios = [u for u in banco_usuarios if u['nome'] != st.session_state.nome_usuario]
     
     if len(outros_usuarios) > 0:
@@ -188,8 +189,20 @@ else:
                 st.rerun()
         with col2:
             if st.button("Direita (Sim) ➡️", use_container_width=True):
+                meu_nome = st.session_state.nome_usuario
+                nome_alvo = nome_exibido
+                
+                if meu_nome not in interesses:
+                    interesses[meu_nome] = set()
+                interesses[meu_nome].add(nome_alvo)
+                
+                if nome_alvo in interesses and meu_nome in interesses[nome_alvo]:
+                    st.success("Match!")
+                    st.balloons()
+                else:
+                    st.toast("Interesse registrado!", icon="🔥")
+                
                 st.session_state.indice_imagem += 1
-                st.toast("Interesse registrado!", icon="🔥")
                 st.rerun()
     else:
         st.info("Aguardando outros usuários se cadastrarem para exibir as fotos.")
