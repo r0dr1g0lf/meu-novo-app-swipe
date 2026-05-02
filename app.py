@@ -4,9 +4,13 @@ import base64
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
-# Inicializa uma lista global compartilhada entre todos os usuários
-if 'banco_usuarios_global' not in st.globals:
-    st.globals['banco_usuarios_global'] = []
+# Função para criar um banco de dados na memória compartilhado entre todos os usuários
+@st.cache_resource
+def obter_banco_dados():
+    return []
+
+# Acessa a lista global
+banco_usuarios = obter_banco_dados()
 
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = False
@@ -34,9 +38,8 @@ if not st.session_state.usuario_logado:
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
             foto_base64 = get_image_base64(foto_perfil)
-            # Salva na lista global para todos os usuários verem
-            novo_usuario = {"nome": nome, "foto": foto_base64}
-            st.globals['banco_usuarios_global'].append(novo_usuario)
+            # Adiciona o novo usuário ao banco compartilhado
+            banco_usuarios.append({"nome": nome, "foto": foto_base64})
             
             st.session_state.usuario_logado = True
             st.session_state.nome_usuario = nome
@@ -54,8 +57,8 @@ else:
     with col_perfil2:
         st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
-    # Busca da lista global, excluindo apenas o próprio usuário logado
-    outros_usuarios = [u for u in st.globals['banco_usuarios_global'] if u['nome'] != st.session_state.nome_usuario]
+    # Filtra os usuários cadastrados (exceto o próprio usuário atual)
+    outros_usuarios = [u for u in banco_usuarios if u['nome'] != st.session_state.nome_usuario]
     
     if len(outros_usuarios) > 0:
         usuario_atual = outros_usuarios[st.session_state.indice_imagem % len(outros_usuarios)]
