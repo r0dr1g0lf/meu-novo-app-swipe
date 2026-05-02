@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
+import time
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
@@ -53,6 +54,21 @@ if not st.session_state.usuario_logado:
             st.error("Por favor, adicione uma foto.")
 
 else:
+    # Componente invisível para forçar a atualização da página a cada 5 segundos
+    # Isso garante que novos cadastros apareçam para quem já está logado
+    components.html(
+        """
+        <script>
+        window.parent.document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                window.parent.location.reload();
+            }, 5000); 
+        });
+        </script>
+        """,
+        height=0,
+    )
+
     col_perfil1, col_perfil2 = st.columns([1, 4])
     with col_perfil1:
         st.image(st.session_state.foto_usuario, width=70)
@@ -206,8 +222,6 @@ else:
                 st.rerun()
     else:
         st.info("Aguardando outros usuários se cadastrarem para exibir as fotos.")
-        if st.button("Atualizar Lista"):
-            st.rerun()
-        if st.button("Sair"):
-            st.session_state.usuario_logado = False
-            st.rerun()
+        st.write("A página atualizará automaticamente quando houver novos usuários.")
+        time.sleep(2)
+        st.rerun()
