@@ -5,10 +5,10 @@ import base64
 st.set_page_config(page_title="Swipe App", layout="centered")
 
 if 'usuario_logado' not in st.session_state:
-    st.session_state.usuario_logado = False[cite: 1]
+    st.session_state.usuario_logado = False
 
 if 'indice_imagem' not in st.session_state:
-    st.session_state.indice_imagem = 0[cite: 1]
+    st.session_state.indice_imagem = 0
 
 if 'banco_de_fotos' not in st.session_state:
     st.session_state.banco_de_fotos = [
@@ -21,34 +21,34 @@ if 'banco_de_fotos' not in st.session_state:
 
 if not st.session_state.usuario_logado:
     st.title("📱 Bem-vindo!")
-    nome = st.text_input("Qual seu nome?")[cite: 1]
+    nome = st.text_input("Qual seu nome?")
     
-    metodo_foto = st.radio("Como deseja adicionar sua foto?", ["Carregar arquivo", "Tirar foto"])[cite: 1]
+    metodo_foto = st.radio("Como deseja adicionar sua foto?", ["Carregar arquivo", "Tirar foto"])
     
     foto_perfil = None
     if metodo_foto == "Carregar arquivo":
-        foto_perfil = st.file_uploader("Escolha uma foto", type=['png', 'jpg', 'jpeg'])[cite: 1]
+        foto_perfil = st.file_uploader("Escolha uma foto", type=['png', 'jpg', 'jpeg'])
     else:
-        foto_perfil = st.camera_input("Tirar foto")[cite: 1]
+        foto_perfil = st.camera_input("Tirar foto")
 
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
-            st.session_state.usuario_logado = True[cite: 1]
-            st.session_state.nome_usuario = nome[cite: 1]
-            st.session_state.foto_usuario = foto_perfil[cite: 1]
+            st.session_state.usuario_logado = True
+            st.session_state.nome_usuario = nome
+            st.session_state.foto_usuario = foto_perfil
             st.session_state.banco_de_fotos.append(foto_perfil)
-            st.rerun()[cite: 1]
+            st.rerun()
         elif not nome:
-            st.error("Por favor, digite seu nome.")[cite: 1]
+            st.error("Por favor, digite seu nome.")
         elif not foto_perfil:
-            st.error("Por favor, adicione uma foto.")[cite: 1]
+            st.error("Por favor, adicione uma foto.")
 
 else:
-    col_perfil1, col_perfil2 = st.columns([1, 4])[cite: 1]
+    col_perfil1, col_perfil2 = st.columns([1, 4])
     with col_perfil1:
-        st.image(st.session_state.foto_usuario, width=70)[cite: 1]
+        st.image(st.session_state.foto_usuario, width=70)
     with col_perfil2:
-        st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")[cite: 1]
+        st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
     imagem_atual = st.session_state.banco_de_fotos[st.session_state.indice_imagem % len(st.session_state.banco_de_fotos)]
     
@@ -57,7 +57,7 @@ else:
         base64_image = base64.b64encode(bytes_data).decode()
         img_src = f"data:image/jpeg;base64,{base64_image}"
     else:
-        img_src = imagem_atual[cite: 1]
+        img_src = imagem_atual
 
     swipe_js = f"""
     <style>
@@ -157,18 +157,18 @@ else:
             startX = null;
         }});
     </script>
-    """[cite: 1]
+    """
 
-    components.html(swipe_js, height=550)[cite: 1]
+    components.html(swipe_js, height=550)
 
-    col1, col2 = st.columns(2)[cite: 1]
+    col1, col2 = st.columns(2)
     with col1:
-        if st.button("⬅️ Esquerda (Não)", use_container_width=True):[cite: 1]
-            st.session_state.indice_imagem += 1[cite: 1]
-            st.toast("Você não se interessou.")[cite: 1]
-            st.rerun()[cite: 1]
+        if st.button("⬅️ Esquerda (Não)", use_container_width=True):
+            st.session_state.indice_imagem += 1
+            st.toast("Você não se interessou.")
+            st.rerun()
     with col2:
-        if st.button("Direita (Sim) ➡️", use_container_width=True):[cite: 1]
-            st.session_state.indice_imagem += 1[cite: 1]
-            st.toast("Interesse registrado!", icon="🔥")[cite: 1]
-            st.rerun()[cite: 1]
+        if st.button("Direita (Sim) ➡️", use_container_width=True):
+            st.session_state.indice_imagem += 1
+            st.toast("Interesse registrado!", icon="🔥")
+            st.rerun()
