@@ -1,7 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
-import time
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
@@ -21,6 +20,9 @@ if 'usuario_logado' not in st.session_state:
 
 if 'indice_imagem' not in st.session_state:
     st.session_state.indice_imagem = 0
+
+if 'total_usuarios_vistos' not in st.session_state:
+    st.session_state.total_usuarios_vistos = 0
 
 def get_image_base64(image_file):
     if hasattr(image_file, 'getvalue'):
@@ -54,20 +56,13 @@ if not st.session_state.usuario_logado:
             st.error("Por favor, adicione uma foto.")
 
 else:
-    # Componente invisível para forçar a atualização da página a cada 5 segundos
-    # Isso garante que novos cadastros apareçam para quem já está logado
-    components.html(
-        """
-        <script>
-        window.parent.document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                window.parent.location.reload();
-            }, 5000); 
-        });
-        </script>
-        """,
-        height=0,
-    )
+    # Monitora o tamanho do banco global. Se mudar, a página atualiza.
+    if "ultima_contagem" not in st.session_state:
+        st.session_state.ultima_contagem = len(banco_usuarios)
+    
+    if len(banco_usuarios) != st.session_state.ultima_contagem:
+        st.session_state.ultima_contagem = len(banco_usuarios)
+        st.rerun()
 
     col_perfil1, col_perfil2 = st.columns([1, 4])
     with col_perfil1:
@@ -201,7 +196,6 @@ else:
         with col1:
             if st.button("⬅️ Esquerda (Não)", use_container_width=True):
                 st.session_state.indice_imagem += 1
-                st.toast("Você não se interessou.")
                 st.rerun()
         with col2:
             if st.button("Direita (Sim) ➡️", use_container_width=True):
@@ -220,8 +214,15 @@ else:
                 
                 st.session_state.indice_imagem += 1
                 st.rerun()
+                
+        # Pequeno script para atualizar a página a cada 10 segundos e checar novos usuários
+        st.empty()
+        st.write("---")
+        if st.button("Atualizar agora"):
+            st.rerun()
+            
     else:
-        st.info("Aguardando outros usuários se cadastrarem para exibir as fotos.")
-        st.write("A página atualizará automaticamente quando houver novos usuários.")
-        time.sleep(2)
-        st.rerun()
+        st.info("Aguardando novos usuários...")
+        st.button("Verificar novos cadastros")
+        # Auto-refresh quando estiver vazio
+        components.html("<script>setTimeout(function(){window.parent.location.reload();}, 5000);</script>", height=0)
