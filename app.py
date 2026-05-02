@@ -20,16 +20,32 @@ urls_imagens = [
 if not st.session_state.usuario_logado:
     st.title("📱 Bem-vindo!")
     nome = st.text_input("Qual seu nome?")
+    
+    metodo_foto = st.radio("Como deseja adicionar sua foto?", ["Carregar arquivo", "Tirar foto"])
+    
+    foto_perfil = None
+    if metodo_foto == "Carregar arquivo":
+        foto_perfil = st.file_uploader("Escolha uma foto", type=['png', 'jpg', 'jpeg'])
+    else:
+        foto_perfil = st.camera_input("Tirar foto")
+
     if st.button("Começar Avaliação"):
-        if nome:
+        if nome and foto_perfil:
             st.session_state.usuario_logado = True
             st.session_state.nome_usuario = nome
+            st.session_state.foto_usuario = foto_perfil
             st.rerun()
-        else:
+        elif not nome:
             st.error("Por favor, digite seu nome.")
+        elif not foto_perfil:
+            st.error("Por favor, adicione uma foto.")
 
 else:
-    st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
+    col_perfil1, col_perfil2 = st.columns([1, 4])
+    with col_perfil1:
+        st.image(st.session_state.foto_usuario, width=70)
+    with col_perfil2:
+        st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
     imagem_atual = urls_imagens[st.session_state.indice_imagem % len(urls_imagens)]
     
