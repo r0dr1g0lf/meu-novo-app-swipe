@@ -197,7 +197,7 @@ else:
                 interesses[meu_nome].add(nome_alvo)
                 
                 if nome_alvo in interesses and meu_nome in interesses[nome_alvo]:
-                    st.success("Match!")
+                    st.success(f"Match com {nome_alvo}!")
                     st.balloons()
                 else:
                     st.toast("Interesse registrado!", icon="🔥")
