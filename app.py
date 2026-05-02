@@ -4,17 +4,24 @@ import base64
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
-# Configuração do Banco de Dados Global em Memória para compartilhar fotos entre sessões
-if 'banco_global' not in st.helpers.__dict__:
-    st.helpers.banco_global = [
-        "https://picsum.photos/id/1011/400/500",
-        "https://picsum.photos/id/1012/400/500",
-        "https://picsum.photos/id/1013/400/500",
-        "https://picsum.photos/id/1014/400/500",
-        "https://picsum.photos/id/1015/400/500"
-    ]
+# Classe para gerenciar o banco de fotos global compartilhado
+class SharedData:
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(SharedData, cls).__new__(cls)
+            cls._instance.banco_global = [
+                "https://picsum.photos/id/1011/400/500",
+                "https://picsum.photos/id/1012/400/500",
+                "https://picsum.photos/id/1013/400/500",
+                "https://picsum.photos/id/1014/400/500",
+                "https://picsum.photos/id/1015/400/500"
+            ]
+        return cls._instance
 
-banco_global = st.helpers.banco_global
+# Inicializa o acesso ao banco global
+shared_storage = SharedData()
+banco_global = shared_storage.banco_global
 
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = False
@@ -36,11 +43,11 @@ if not st.session_state.usuario_logado:
 
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
-            # Processa a foto para base64 para garantir armazenamento global consistente
+            # Processa a foto para base64
             bytes_data = foto_perfil.getvalue()
             base64_foto = f"data:image/jpeg;base64,{base64.b64encode(bytes_data).decode()}"
             
-            # Adiciona ao banco que todos os usuários acessam
+            # Adiciona ao banco compartilhado (todos os usuários verão)
             banco_global.append(base64_foto)
             
             st.session_state.usuario_logado = True
@@ -59,7 +66,7 @@ else:
     with col_perfil2:
         st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
-    # Acessa a lista global de fotos
+    # Exibe a imagem da lista compartilhada
     imagem_atual = banco_global[st.session_state.indice_imagem % len(banco_global)]
     
     swipe_js = f"""
