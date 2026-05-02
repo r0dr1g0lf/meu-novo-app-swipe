@@ -4,8 +4,9 @@ import base64
 
 st.set_page_config(page_title="Swipe App", layout="centered")
 
-if 'lista_usuarios' not in st.session_state:
-    st.session_state.lista_usuarios = []
+# Inicializa uma lista global compartilhada entre todos os usuários
+if 'banco_usuarios_global' not in st.globals:
+    st.globals['banco_usuarios_global'] = []
 
 if 'usuario_logado' not in st.session_state:
     st.session_state.usuario_logado = False
@@ -33,7 +34,10 @@ if not st.session_state.usuario_logado:
     if st.button("Começar Avaliação"):
         if nome and foto_perfil:
             foto_base64 = get_image_base64(foto_perfil)
-            st.session_state.lista_usuarios.append({"nome": nome, "foto": foto_base64})
+            # Salva na lista global para todos os usuários verem
+            novo_usuario = {"nome": nome, "foto": foto_base64}
+            st.globals['banco_usuarios_global'].append(novo_usuario)
+            
             st.session_state.usuario_logado = True
             st.session_state.nome_usuario = nome
             st.session_state.foto_usuario = foto_perfil
@@ -50,7 +54,8 @@ else:
     with col_perfil2:
         st.write(f"Olá, **{st.session_state.nome_usuario}**! Deslize ou clique:")
     
-    outros_usuarios = [u for u in st.session_state.lista_usuarios if u['nome'] != st.session_state.nome_usuario]
+    # Busca da lista global, excluindo apenas o próprio usuário logado
+    outros_usuarios = [u for u in st.globals['banco_usuarios_global'] if u['nome'] != st.session_state.nome_usuario]
     
     if len(outros_usuarios) > 0:
         usuario_atual = outros_usuarios[st.session_state.indice_imagem % len(outros_usuarios)]
@@ -87,9 +92,9 @@ else:
                 left: 20px;
                 color: white;
                 font-family: sans-serif;
-                font-size: 24px;
+                font-size: 28px;
                 font-weight: bold;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                text-shadow: 2px 2px 8px rgba(0,0,0,1);
                 z-index: 4;
             }}
             .overlay-text {{
@@ -185,6 +190,8 @@ else:
                 st.rerun()
     else:
         st.info("Aguardando outros usuários se cadastrarem para exibir as fotos.")
+        if st.button("Atualizar Lista"):
+            st.rerun()
         if st.button("Sair"):
             st.session_state.usuario_logado = False
             st.rerun()
